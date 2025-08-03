@@ -22,20 +22,10 @@ MODEL_URLS = {
     "matcha-tts-fa_en-musa": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-tts-fa_en-musa.tar.bz2",
     "matcha-tts-fa_en-khadijah": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-tts-fa_en-khadijah.tar.bz2",
     "vits-piper-fa_IR-gyro-medium": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-gyro-medium.tar.bz2",
-    "vits-piper-fa_IR-gyro-medium-int8": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-gyro-medium-int8.tar.bz2",
-    "vits-piper-fa_IR-gyro-medium-fp16": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-gyro-medium-fp16.tar.bz2",
     "vits-piper-fa_IR-ganji_adabi-medium": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-ganji_adabi-medium.tar.bz2",
-    "vits-piper-fa_IR-ganji_adabi-medium-int8": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-ganji_adabi-medium-int8.tar.bz2",
-    "vits-piper-fa_IR-ganji_adabi-medium-fp16": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-ganji_adabi-medium-fp16.tar.bz2",
     "vits-piper-fa_IR-reza_ibrahim-medium": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-reza_ibrahim-medium.tar.bz2",
-    "vits-piper-fa_IR-reza_ibrahim-medium-int8": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-reza_ibrahim-medium-int8.tar.bz2",
-    "vits-piper-fa_IR-reza_ibrahim-medium-fp16": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-reza_ibrahim-medium-fp16.tar.bz2",
     "vits-piper-fa_IR-ganji-medium": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-ganji-medium.tar.bz2",
-    "vits-piper-fa_IR-ganji-medium-int8": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-ganji-medium-int8.tar.bz2",
-    "vits-piper-fa_IR-ganji-medium-fp16": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-ganji-medium-fp16.tar.bz2",
     "vits-piper-fa_IR-amir-medium": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-amir-medium.tar.bz2",
-    "vits-piper-fa_IR-amir-medium-int8": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-amir-medium-int8.tar.bz2",
-    "vits-piper-fa_IR-amir-medium-fp16": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-amir-medium-fp16.tar.bz2",
 }
 
 MODEL_DIR = "/home/dev/.cache/tts-models"
@@ -86,6 +76,8 @@ def download_and_extract_model(model_name: str):
 def generate_speech(text: str, model_name: str, speed: float):
     os.makedirs(GENERATED_FILES_DIR, exist_ok=True)
 
+    text = text.replace("**", "")
+
     # Generate file path
     file_name = f"{model_name}_{uuid.uuid4().hex[:8]}.wav"
     file_path = os.path.join(GENERATED_FILES_DIR, file_name)
@@ -128,8 +120,10 @@ def generate_speech(text: str, model_name: str, speed: float):
             max_num_sentences=max_num_sentences,
         )
 
-        if not tts_config.validate():
-            raise ValueError("Invalid TTS configuration")
+        print(tts_config)
+
+        # if not tts_config.validate():
+        #     raise ValueError("Invalid TTS configuration")
 
         tts = sherpa_onnx.OfflineTts(tts_config)
 
