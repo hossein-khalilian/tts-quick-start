@@ -5,6 +5,7 @@ import time
 import traceback
 import urllib.request
 import uuid
+from pathlib import Path
 from threading import Timer
 
 import sherpa_onnx
@@ -28,8 +29,9 @@ MODEL_URLS = {
     "vits-piper-fa_IR-amir-medium": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-amir-medium.tar.bz2",
 }
 
-MODEL_DIR = "/home/dev/.cache/tts-models"
-GENERATED_FILES_DIR = "/home/dev/.cache/generated_audios"
+MODEL_DIR = Path("/home/dev/.cache/tts-models")
+GENERATED_FILES_DIR = Path("/home/dev/.cache/generated_audios")
+os.makedirs(GENERATED_FILES_DIR, exist_ok=True)
 
 # Default configurations that will be used for each model
 DEFAULT_MODEL_CONFIGS = {
@@ -74,24 +76,16 @@ def download_and_extract_model(model_name: str):
 
 # Function to generate speech
 def generate_speech(text: str, model_name: str, speed: float):
-    os.makedirs(GENERATED_FILES_DIR, exist_ok=True)
-
     text = text.replace("**", "")
 
     # Generate file path
     file_name = f"{model_name}_{uuid.uuid4().hex[:8]}.wav"
-    file_path = os.path.join(GENERATED_FILES_DIR, file_name)
+    file_path = GENERATED_FILES_DIR / file_name
 
     try:
         # Construct the model paths based on model name
-        model_dir = os.path.join(MODEL_DIR, model_name)
-        model_file = os.path.join(
-            model_dir, f"{model_name.replace('vits-piper-', '')}.onnx"
-        )
-        lexicon = ""
-        tokens = os.path.join(model_dir, "tokens.txt")
-        data_dir = os.path.join(model_dir, "espeak-ng-data")
-        dict_dir = ""
+        model_dir = MODEL_DIR / model_name
+        model_file = model_dir / f"{model_name.replace('vits-piper-', '')}.onnx"
 
         # Get default configuration for the model (or use passed speed)
         model_config = DEFAULT_MODEL_CONFIGS.get(model_name, {})
@@ -106,11 +100,11 @@ def generate_speech(text: str, model_name: str, speed: float):
         tts_config = sherpa_onnx.OfflineTtsConfig(
             model=sherpa_onnx.OfflineTtsModelConfig(
                 vits=sherpa_onnx.OfflineTtsVitsModelConfig(
-                    model=model_file,
-                    lexicon=lexicon,
-                    data_dir=data_dir,
-                    dict_dir=dict_dir,
-                    tokens=tokens,
+                    model=str(model_file),
+                    lexicon="",
+                    data_dir=str(model_dir / "espeak-ng-data"),
+                    dict_dir="",
+                    tokens=str(model_dir / "tokens.txt"),
                 ),
                 provider=provider,
                 debug=debug,
@@ -119,8 +113,6 @@ def generate_speech(text: str, model_name: str, speed: float):
             rule_fsts=rule_fsts,
             max_num_sentences=max_num_sentences,
         )
-
-        print(tts_config)
 
         # if not tts_config.validate():
         #     raise ValueError("Invalid TTS configuration")
@@ -135,9 +127,9 @@ def generate_speech(text: str, model_name: str, speed: float):
         if len(audio.samples) == 0:
             return jsonify({"error": "Error generating audio."}), 500
 
-        elapsed_seconds = end - start
-        audio_duration = len(audio.samples) / audio.sample_rate
-        real_time_factor = elapsed_seconds / audio_duration
+        # elapsed_seconds = end - start
+        # audio_duration = len(audio.samples) / audio.sample_rate
+        # real_time_factor = elapsed_seconds / audio_duration
 
         # Save the generated audio file
         sf.write(

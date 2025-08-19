@@ -1,0 +1,3 @@
+flask
+sherpa-onnx
+soundfile
